@@ -14,8 +14,8 @@ def get_level_diff(x):
     t1_avg = 0
     t2_avg = 0
     for i in range(0,5):
-        t1_avg += x[-1]["allPlayers"][i]["level"]
-        t2_avg += x[-1]["allPlayers"][i+5]["level"]
+        t1_avg += x["allPlayers"][i]["level"]
+        t2_avg += x["allPlayers"][i+5]["level"]
     t1_avg = t1_avg/5
     t2_avg = t2_avg/5
     return t1_avg - t2_avg
@@ -154,16 +154,23 @@ def first_drake(x):
 def first_tower(x):
     team_pov = team_of_active_player(x) #"t1" or "t2"
     t1_players, _ = get_teams(x) #2lists of players
-    first_tower_receivers = ""
+    first_tower_taker = ""
     
     for i in range(0,len(x["events"]['Events'])):
         if (x["events"]['Events'][i]["EventName"] == "TurretKilled"):
             if (x["events"]['Events'][i]["TurretKilled"] in t2_towers_ID):
-                first_tower_receivers = "t1"
+                first_tower_taker = "t1"
                 break
             else:
-                first_tower_receivers = "t2"
+                first_tower_taker = "t2"
                 break
+
+    if first_tower_taker == "t1" and team_pov =="t1":
+        return 1
+    elif first_tower_taker == "t2" and team_pov =="t2":
+        return 2
+    else:
+        return 0
 
 def first_blood(x):
     t1_players, _ = get_teams(x)
@@ -197,6 +204,20 @@ def get_inhibs_amount(x):
         return t1_team_destroyed_num
     else:
         return t2_team_destroyed_num
+    
+def towers_amount(x):    
+    t1_amount = 0
+    t2_amount = 0
+    for i in range(len(x["events"]['Events'])):
+        if x["events"]['Events'][i]['EventName'] == 'TurretKilled':
+            if x["events"]['Events'][i]["TurretKilled"] in t1_towers_ID:
+                t2_amount += 1
+            elif x["events"]['Events'][i]["TurretKilled"] in t2_towers_ID:
+                t1_amount += 1
+    if team_of_active_player(x) == "t1":
+        return t1_amount
+    else:
+        return t2_amount
     
 def herald_amount(x):
     t1_heralds=0
@@ -263,18 +284,22 @@ def timestamp(x):
 def current_stats(x):
     current_game_stats = {}
     current_game_stats["time"] = timestamp(x)
-    current_game_stats["first_blood"] = first_blood(x)
-    current_game_stats["first_tower"] = first_tower(x)
-    current_game_stats["first_inhib"] = first_inhib(x)
+    current_game_stats["firstBlood"] = first_blood(x)
+    current_game_stats["firstTower"] = first_tower(x)
+    current_game_stats["firstInhibitor"] = first_inhib(x)
+    current_game_stats["firstDragon"] = first_drake(x)
+    # current_game_stats["firstBaron"] = first_baron(x)
+    current_game_stats["tower_amount"] = towers_amount(x)
     current_game_stats["inhibs_amount"] = get_inhibs_amount(x)
-    current_game_stats["first_dragon"] = first_drake(x)
+    # current_game_stats["firstRiftHerald"] = first_herald(x)
+    # current_game_stats["baron_amount"] = get_baron_amount(x)
     current_game_stats["Dragons_Amount"] = get_dragons_amount(x)
-    current_game_stats["Heralds_amount"] = herald_amount(x)
+    current_game_stats["riftHeralds_amount"] = herald_amount(x)
     current_game_stats["Kills_Diff"] = get_kills_diff(x)
     current_game_stats["Death_Diff"] = get_deaths_diff(x)
     current_game_stats["Assist_Diff"] = get_assists_diff(x)
-    current_game_stats["Lvl_Diff"] = get_level_diff(x)
+    current_game_stats["Lv_Diff"] = get_level_diff(x)
     current_game_stats["cs_Diff"] = cs_diff(x)
-    current_game_stats["jungle_cs_Diff"] = jungle_cs_diff(x)
+    current_game_stats["jg_cs_Diff"] = jungle_cs_diff(x)
     current_game_stats["win_probability"] = 0.5
     return current_game_stats
